@@ -677,5 +677,304 @@ renderAll = function () {
   renderBalance();
 };
 renderBalance();
+/* ---------- Calendar v2: "!" mark, sticky notes, day panel ---------- */
+var selectedDay = null;
 
+/* This replaces the older renderCalendar above. The later one wins, so you can leave the old one. */
+function renderCalendar() {
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+  document.getElementById("calTitle").textContent = new Date(calYear, calMonth, 1)
+    .toLocaleDateString(undefined, { month: "long", year: "numeric" });
 
+  ["M", "T", "W", "T", "F", "S", "S"].forEach(function (d) {
+    const h = document.createElement("div");
+    h.className = "cal-dow";
+    h.textContent = d;
+    grid.append(h);
+  });
+
+  const offset = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
+  for (let i = 0; i < offset; i++) {
+    grid.append(document.createElement("div"));
+  }
+
+  const days = new Date(calYear, calMonth + 1, 0).getDate();
+  const now = new Date();
+  const todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  for (let d = 1; d <= days; d++) {
+    const key = ymd(calYear, calMonth, d);
+    const dayTasks = tasks
+      .filter(function (t) { return t.due.slice(0, 10) === key; })
+      .sort(function (a, b) { return a.due.localeCompare(b.due); });
+    const open = dayTasks.filter(function (t) { return !t.done; });
+    const diff = Math.round((new Date(calYear, calMonth, d) - todayMid) / 86400000);
+
+    const cell = document.createElement("div");
+    cell.className = "cal-cell";
+    if (diff === 0) cell.classList.add("today");
+    if (key === selectedDay) cell.classList.add("selected");
+    if (open.length > 0) {
+      let heat = "heat-4";
+      if (diff < 0) heat = "heat-past";
+      else if (diff === 0) heat = "heat-0";
+      else if (diff === 1) heat = "heat-1";
+      else if (diff <= 3) heat = "heat-2";
+      else if (diff <= 7) heat = "heat-3";
+      cell.classList.add(heat);
+    }
+
+    const top = document.createElement("div");
+    top.className = "cal-top";
+    const num = document.createElement("span");
+    num.textContent = d;
+    const mark = document.createElement("span");
+    mark.className = open.length > 0 ? "cal-mark warn" : "cal-mark ok";
+    mark.textContent = open.length > 0 ? "!" : dayTasks.length > 0 ? "✓" : "";
+    top.append(num, mark);
+    cell.append(top);
+
+    dayTasks.slice(0, 2).forEach(function (t, i) {
+      const s = document.createElement("div");
+      s.className = "sticky s" + (i % 3) + (t.done ? " done" : "");
+      s.textContent = t.title;
+      cell.append(s);
+    });
+    if (dayTasks.length > 2) {
+      const more = document.createElement("div");
+      more.className = "cal-more";
+      more.textContent = "+" + (dayTasks.length - 2);
+      cell.append(more);
+    }
+
+    cell.onclick = function () {
+      selectedDay = key;
+      renderCalendar();
+      document.getElementById("dayPanel").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    };
+    grid.append(cell);
+  }
+
+  renderDayPanel();
+}
+
+function renderDayPanel() {
+  const card = document.getElementById("calGrid").parentElement;
+  let panel = document.getElementById("dayPanel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "dayPanel";
+    panel.className = "card day-panel";
+    card.after(panel);
+  }
+  panel.innerHTML = "";
+  panel.classList.toggle("hidden", !selectedDay);
+  if (!selectedDay) return;
+
+  const head = document.createElement("div");
+  head.className = "cal-head";
+  const title = document.createElement("h3");
+  title.textContent = parseDate(selectedDay).toLocaleDateString(undefined, {
+    weekday: "long", day: "numeric", month: "long"
+  });
+  const close = makeDelete(function () {
+    selectedDay = null;
+    renderCalendar();
+  });
+  head.append(title, close);
+  panel.append(head);
+
+  const dayTasks = tasks
+    .filter(function (t) { return t.due.slice(0, 10) === selectedDay; })
+    .sort(function (a, b) { return a.due.localeCompare(b.due); });
+
+  if (dayTasks.length === 0) {
+    const empty = document.createElement("div");
+    empty.textContent = "Nothing scheduled yet.";
+    panel.append(empty);
+  }
+
+  dayTasks.forEach(function (t, i) {
+    const row = document.createElement("div");
+    row.className = "note-row s" + (i % 3) + (t.done ? " done" : "");
+
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = t.done;
+    box.onchange = function () {
+      t.done = box.checked;
+      saveAll();
+      renderAll();
+    };
+
+    const info = document.createElement("div");
+    info.className = "info";
+    const name = document.createElement("strong");
+    name.textContent = t.due.slice(11, 16) + "  " + t.title;
+    info.append(name);
+    if (t.notes) {
+      const n = document.createElement("div");
+      n.className = "notes";
+      n.textContent = t.notes;
+      info.append(n);
+    }
+
+    const del = makeDelete(function () {
+      if (!confirm("Delete this schedule?")) return;
+      tasks = tasks.filter(function (x) { return x !== t; });
+      saveAll();
+      renderAll();
+    });
+
+    row.append(box, info, del);
+    panel.append(row);
+  });
+
+  const form = document.createElement("div");
+  form.className = "form day-form";
+  const fTitle = document.createElement("input");
+  fTitle.placeholder = "Add a schedule to this day";
+  const fTime = document.createElement("input");
+  fTime.type = "time";
+  fTime.value = "09:00";
+  const fNotes = document.createElement("textarea");
+  fNotes.placeholder = "Notes";
+  const add = document.createElement("button");
+  add.textContent = "Add to this day";
+  add.onclick = function () {
+    const text = fTitle.value.trim();
+    if (!text || !fTime.value) {
+      alert("Please enter a title and a time.");
+      return;
+    }
+    tasks.push({ title: text, due: selectedDay + "T" + fTime.value, notes: fNotes.value, done: false });
+    saveAll();
+    renderAll();
+  };
+  form.append(fTitle, fTime, fNotes, add);
+  panel.append(form);
+}
+
+renderCalendar();
+
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth();
+
+function ymd(y, m, d) {
+  return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+}
+
+function renderCalendar() {
+  const grid = document.getElementById("calGrid");
+  grid.innerHTML = "";
+  document.getElementById("calTitle").textContent = new Date(calYear, calMonth, 1)
+    .toLocaleDateString(undefined, { month: "long", year: "numeric" });
+
+  ["M", "T", "W", "T", "F", "S", "S"].forEach(function (d) {
+    const h = document.createElement("div");
+    h.className = "cal-dow";
+    h.textContent = d;
+    grid.append(h);
+  });
+
+  const offset = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
+  for (let i = 0; i < offset; i++) {
+    grid.append(document.createElement("div"));
+  }
+
+  const days = new Date(calYear, calMonth + 1, 0).getDate();
+  const now = new Date();
+  const todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  for (let d = 1; d <= days; d++) {
+    const key = ymd(calYear, calMonth, d);
+    const dayTasks = tasks.filter(function (t) { return t.due.slice(0, 10) === key; });
+    const open = dayTasks.filter(function (t) { return !t.done; });
+    const diff = Math.round((new Date(calYear, calMonth, d) - todayMid) / 86400000);
+
+    const cell = document.createElement("div");
+    cell.className = "cal-cell";
+    if (diff === 0) cell.classList.add("today");
+    if (open.length > 0) {
+      let heat = "heat-4";
+      if (diff < 0) heat = "heat-past";
+      else if (diff === 0) heat = "heat-0";
+      else if (diff === 1) heat = "heat-1";
+      else if (diff <= 3) heat = "heat-2";
+      else if (diff <= 7) heat = "heat-3";
+      cell.classList.add(heat);
+    }
+
+    const num = document.createElement("span");
+    num.textContent = d;
+    const icon = document.createElement("span");
+    icon.className = "cal-icon";
+    icon.textContent = open.length > 0 ? "★" : dayTasks.length > 0 ? "✓" : "";
+    cell.append(num, icon);
+
+    cell.onclick = function () {
+      document.getElementById("taskDue").value = key + "T09:00";
+      const t = document.getElementById("taskTitle");
+      t.scrollIntoView({ behavior: "smooth", block: "center" });
+      t.focus();
+    };
+    grid.append(cell);
+  }
+}
+
+function renderReminder() {
+  const now = new Date();
+  const limit = new Date(now.getTime() + 3 * 86400000);
+  const soon = tasks
+    .filter(function (t) {
+      const due = new Date(t.due);
+      return !t.done && due >= now && due <= limit;
+    })
+    .sort(function (a, b) { return new Date(a.due) - new Date(b.due); });
+
+  ["page-home", "page-schedule"].forEach(function (id) {
+    const page = document.getElementById(id);
+    let box = page.querySelector(".reminder");
+    if (!box) {
+      box = document.createElement("div");
+      box.className = "reminder";
+      page.prepend(box);
+    }
+    box.innerHTML = "";
+    box.classList.toggle("hidden", soon.length === 0);
+    if (soon.length === 0) return;
+
+    const head = document.createElement("strong");
+    head.textContent = "⏰ Coming up in the next 3 days";
+    box.append(head);
+    soon.forEach(function (t) {
+      const line = document.createElement("div");
+      line.textContent = t.title + " · " + new Date(t.due).toLocaleString(undefined, {
+        weekday: "short", day: "numeric", month: "short",
+        hour: "2-digit", minute: "2-digit"
+      });
+      box.append(line);
+    });
+  });
+}
+
+document.getElementById("calPrev").onclick = function () {
+  calMonth--;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+};
+document.getElementById("calNext").onclick = function () {
+  calMonth++;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  renderCalendar();
+};
+
+const oldRenderAll2 = renderAll;
+renderAll = function () {
+  oldRenderAll2();
+  renderCalendar();
+  renderReminder();
+};
+renderCalendar();
+renderReminder();
