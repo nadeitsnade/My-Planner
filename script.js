@@ -647,4 +647,35 @@ resetMoneyForm();
 setInterval(updateTimes, 1000);
 renderAll();
 fetchRate();
+function renderBalance() {
+  let cash = 0;
+  let cashless = 0;
+
+  money.forEach(function (m) {
+    if (m.pay === "loan") return;
+    const amount = m.type === "income" ? m.amount : -m.amount;
+    if (m.pay === "cashless") {
+      cashless += amount;
+    } else {
+      cash += amount;
+    }
+  });
+
+  const box = document.getElementById("balanceBox");
+  box.innerHTML = "";
+  box.append(
+    moneyRow("Cash", cash, cash >= 0 ? "plus" : "minus"),
+    moneyRow("Cashless", cashless, cashless >= 0 ? "plus" : "minus"),
+    moneyRow("Total", cash + cashless, cash + cashless >= 0 ? "plus" : "minus")
+  );
+}
+
+/* make the page redraw the wallet every time it redraws everything else */
+const oldRenderAll = renderAll;
+renderAll = function () {
+  oldRenderAll();
+  renderBalance();
+};
+renderBalance();
+
 
