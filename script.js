@@ -100,46 +100,152 @@ document.querySelectorAll(".tab").forEach(function (btn) {
   };
 });
 
+/* ---------- Live Clock ---------- */
+function updateLiveClock() {
+  const clockEl = document.getElementById("liveClock");
+  if (!clockEl) return;
+  const now = new Date();
+  const timeString = now.toLocaleTimeString();
+  const dateString = now.toLocaleDateString(undefined, { 
+    weekday: 'short', 
+    month: 'short', 
+    day: 'numeric' 
+  });
+  clockEl.textContent = dateString + " - " + timeString;
+}
+
 /* ---------- Home ---------- */
 function renderHome() {
-  document.getElementById("today").textContent = new Date().toLocaleDateString(
-    undefined,
-    { weekday: "long", month: "long", day: "numeric" }
-  );
+  const todayEl = document.getElementById("today");
+  if (todayEl) {
+    todayEl.textContent = new Date().toLocaleDateString(
+      undefined,
+      { weekday: "long", month: "long", day: "numeric" }
+    );
+  }
 
   const next = document.getElementById("next");
-  next.innerHTML = "";
-  const now = new Date();
-  const upcoming = tasks
-    .filter(function (t) { return !t.done && new Date(t.due) > now; })
-    .sort(function (a, b) { return new Date(a.due) - new Date(b.due); })
-    .slice(0, 3);
+  if (next) {
+    next.innerHTML = "";
+    const now = new Date();
+    const upcoming = tasks
+      .filter(function (t) { return !t.done && new Date(t.due) > now; })
+      .sort(function (a, b) { return new Date(a.due) - new Date(b.due); })
+      .slice(0, 3);
 
-  if (upcoming.length === 0) {
-    next.textContent = "Nothing coming up.";
+    if (upcoming.length === 0) {
+      next.textContent = "Nothing coming up.";
+    }
+    upcoming.forEach(function (t) {
+      const row = document.createElement("div");
+      row.className = "mini";
+      const title = document.createElement("strong");
+      title.textContent = t.title;
+      const when = document.createElement("div");
+      when.className = "when";
+      when.textContent = new Date(t.due).toLocaleString();
+      row.append(title, when, makeLeft(t));
+      next.append(row);
+    });
   }
-  upcoming.forEach(function (t) {
-    const row = document.createElement("div");
-    row.className = "mini";
-    const title = document.createElement("strong");
-    title.textContent = t.title;
-    const when = document.createElement("div");
-    when.className = "when";
-    when.textContent = new Date(t.due).toLocaleString();
-    row.append(title, when, makeLeft(t));
-    next.append(row);
+
+  const stats = document.getElementById("stats");
+  if (stats) {
+    const doneTasks = tasks.filter(function (t) { return t.done; }).length;
+    const doneTodos = todos.filter(function (t) { return t.done; }).length;
+    stats.textContent =
+      "Schedule: " + doneTasks + " of " + tasks.length + " done  |  " +
+      "To-do: " + doneTodos + " of " + todos.length + " done";
+  }
+
+  renderSpendingMood();
+}
+
+function renderSpendingMood() {
+  const card = document.getElementById("spendingMoodCard");
+  if (!card) return;
+
+  const month = todayStr().slice(0, 7);
+  const thisMonth = money.filter(function (m) {
+    return m.date.slice(0, 7) === month && m.type === "expense" && m.pay !== "loan";
   });
 
-  const doneTasks = tasks.filter(function (t) { return t.done; }).length;
-  const doneTodos = todos.filter(function (t) { return t.done; }).length;
-  document.getElementById("stats").textContent =
-    "Schedule: " + doneTasks + " of " + tasks.length + " done  |  " +
-    "To-do: " + doneTodos + " of " + todos.length + " done";
+  let totalSpent = 0;
+  const byCat = {};
+  thisMonth.forEach(function (m) {
+    totalSpent += m.amount;
+    byCat[m.cat] = (byCat[m.cat] || 0) + m.amount;
+  });
+
+  const totalDisplay = document.getElementById("monthlyTotalDisplay");
+  if (totalDisplay) totalDisplay.textContent = "Spent: " + fmt(totalSpent);
+
+  const avatar = document.getElementById("moodAvatar");
+  const msg = document.getElementById("moodMessage");
+
+  if (avatar && msg) {
+    if (totalSpent === 0) {
+      avatar.textContent = "😎";
+      avatar.style.transform = "rotate(0deg)";
+      msg.textContent = "Untouched wallet. Pristine.";
+      card.style.background = "#c8f0c8";
+    } else if (totalSpent < 500000) {
+      avatar.textContent = "🙂";
+      avatar.style.transform = "rotate(0deg)";
+      msg.textContent = "Looking healthy and under control.";
+      card.style.background = "#fff3a8";
+    } else if (totalSpent < 2000000) {
+      avatar.textContent = "😬";
+      avatar.style.transform = "rotate(-3deg)";
+      msg.textContent = "Uhh... expenses are piling up.";
+      card.style.background = "#ffd6a5";
+    } else if (totalSpent < 5000000) {
+      avatar.textContent = "😰";
+      avatar.style.transform = "rotate(3deg)";
+      msg.textContent = "STOP SWIPING! Wallet is sweating!";
+      card.style.background = "#ffb98a";
+    } else {
+      avatar.textContent = "💀";
+      avatar.style.transform = "rotate(6deg) scale(1.1)";
+      msg.textContent = "ABSOLUTE FINANCIAL RUIN. SEND HELP.";
+      card.style.background = "#ff9b8a";
+    }
+  }
+
+  const topList = document.getElementById("topCategoriesList");
+  if (topList) {
+    topList.innerHTML = "";
+    
+    const sortedCats = Object.keys(byCat)
+      .sort(function (a, b) { return byCat[b] - byCat[a]; })
+      .slice(0, 3);
+
+    if (sortedCats.length === 0) {
+      const empty = document.createElement("div");
+      empty.style.textAlign = "center";
+      empty.style.color = "#4a5a6a";
+      empty.textContent = "No expenses recorded this month.";
+      topList.append(empty);
+    } else {
+      sortedCats.forEach(function (cat, index) {
+        const row = document.createElement("div");
+        row.className = "top-cat-row";
+        const name = document.createElement("span");
+        name.textContent = (index + 1) + ". " + cat;
+        const amt = document.createElement("span");
+        amt.textContent = fmt(byCat[cat]);
+        amt.className = "minus";
+        row.append(name, amt);
+        topList.append(row);
+      });
+    }
+  }
 }
 
 /* ---------- Schedule ---------- */
 function renderSchedule() {
   const list = document.getElementById("list");
+  if (!list) return;
   list.innerHTML = "";
   tasks.sort(function (a, b) { return new Date(a.due) - new Date(b.due); });
 
@@ -179,69 +285,143 @@ function renderSchedule() {
   });
 }
 
-document.getElementById("addTask").onclick = function () {
-  const title = document.getElementById("taskTitle").value.trim();
-  const due = document.getElementById("taskDue").value;
-  const taskNotes = document.getElementById("taskNotes").value;
+const addTaskBtn = document.getElementById("addTask");
+if (addTaskBtn) {
+  addTaskBtn.onclick = function () {
+    const title = document.getElementById("taskTitle").value.trim();
+    const due = document.getElementById("taskDue").value;
+    const taskNotes = document.getElementById("taskNotes").value;
 
-  if (!title || !due) {
-    alert("Please enter a title and pick a date and time.");
-    return;
-  }
-  tasks.push({ title: title, due: due, notes: taskNotes, done: false });
-  saveAll();
-  renderAll();
-  document.getElementById("taskTitle").value = "";
-  document.getElementById("taskDue").value = "";
-  document.getElementById("taskNotes").value = "";
-};
+    if (!title || !due) {
+      alert("Please enter a title and pick a date and time.");
+      return;
+    }
+    tasks.push({ title: title, due: due, notes: taskNotes, done: false });
+    saveAll();
+    renderAll();
+    document.getElementById("taskTitle").value = "";
+    document.getElementById("taskDue").value = "";
+    document.getElementById("taskNotes").value = "";
+  };
+}
 
-/* ---------- Notes ---------- */
+/* ---------- Notes (Grid View, Dates & Edit) ---------- */
+let editingNoteId = null;
+
 function renderNotes() {
   const list = document.getElementById("noteList");
+  if (!list) return;
   list.innerHTML = "";
 
   notes.slice().reverse().forEach(function (n) {
-    const card = document.createElement("div");
-    card.className = "task";
+    if (!n.id) n.id = Date.now() + Math.random();
+    if (!n.date) n.date = todayStr();
 
-    const info = document.createElement("div");
-    info.className = "info";
+    const card = document.createElement("div");
+    card.className = "sticky-note";
+
+    const header = document.createElement("div");
+    header.className = "sticky-header";
     const title = document.createElement("strong");
     title.textContent = n.title;
-    const text = document.createElement("div");
-    text.className = "notes";
-    text.textContent = n.text;
-    info.append(title, text);
+
+    const actionGroup = document.createElement("div");
+    actionGroup.className = "sticky-actions-group";
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "small-edit-btn";
+    editBtn.textContent = "✏️";
+    editBtn.title = "Edit note";
+    editBtn.onclick = function () { startEditNote(n); };
 
     const del = makeDelete(function () {
-      notes = notes.filter(function (x) { return x !== n; });
+      notes = notes.filter(function (x) { return x.id !== n.id; });
       saveAll();
       renderAll();
     });
 
-    card.append(info, del);
+    actionGroup.append(editBtn, del);
+    header.append(title, actionGroup);
+
+    const text = document.createElement("div");
+    text.className = "sticky-body";
+    text.textContent = n.text;
+
+    const footer = document.createElement("div");
+    footer.className = "sticky-footer";
+    const dateSpan = document.createElement("span");
+    dateSpan.textContent = n.date;
+    footer.append(dateSpan);
+
+    card.append(header, text, footer);
     list.append(card);
   });
 }
 
-document.getElementById("addNote").onclick = function () {
-  const title = document.getElementById("noteTitle").value.trim();
-  const text = document.getElementById("noteText").value;
-  if (!title && !text.trim()) {
-    alert("Write a title or some text first.");
-    return;
-  }
-  notes.push({ title: title || "Untitled", text: text });
-  saveAll();
-  renderAll();
-  document.getElementById("noteTitle").value = "";
-  document.getElementById("noteText").value = "";
-};
+const noteModal = document.getElementById("noteModal");
+const openNoteModalBtn = document.getElementById("openNoteModalBtn");
+const closeNoteModalBtn = document.getElementById("closeNoteModal");
+const noteModalTitle = document.getElementById("noteModalTitle");
+
+if (openNoteModalBtn) {
+  openNoteModalBtn.onclick = function () {
+    editingNoteId = null;
+    if (noteModalTitle) noteModalTitle.textContent = "New Note";
+    document.getElementById("noteTitle").value = "";
+    document.getElementById("noteText").value = "";
+    if (noteModal) noteModal.classList.remove("hidden");
+  };
+}
+
+if (closeNoteModalBtn) {
+  closeNoteModalBtn.onclick = function () {
+    if (noteModal) noteModal.classList.add("hidden");
+  };
+}
+
+function startEditNote(n) {
+  editingNoteId = n.id;
+  if (noteModalTitle) noteModalTitle.textContent = "Edit Note";
+  document.getElementById("noteTitle").value = n.title;
+  document.getElementById("noteText").value = n.text;
+  if (noteModal) noteModal.classList.remove("hidden");
+}
+
+const addNoteBtn = document.getElementById("addNote");
+if (addNoteBtn) {
+  addNoteBtn.onclick = function () {
+    const title = document.getElementById("noteTitle").value.trim();
+    const text = document.getElementById("noteText").value;
+    if (!title && !text.trim()) {
+      alert("Write a title or some text first.");
+      return;
+    }
+
+    if (editingNoteId) {
+      const existing = notes.find(function (x) { return x.id === editingNoteId; });
+      if (existing) {
+        existing.title = title || "Untitled";
+        existing.text = text;
+      }
+    } else {
+      notes.push({
+        id: Date.now(),
+        title: title || "Untitled",
+        text: text,
+        date: todayStr()
+      });
+    }
+
+    saveAll();
+    renderAll();
+    if (noteModal) noteModal.classList.add("hidden");
+  };
+}
 
 /* ---------- To-do ---------- */
 function renderTodos() {
   const list = document.getElementById("todoList");
+  if (!list) return;
   list.innerHTML = "";
 
   todos.forEach(function (t) {
@@ -274,14 +454,17 @@ function renderTodos() {
   });
 }
 
-document.getElementById("addTodo").onclick = function () {
-  const text = document.getElementById("todoText").value.trim();
-  if (!text) return;
-  todos.push({ text: text, done: false });
-  saveAll();
-  renderAll();
-  document.getElementById("todoText").value = "";
-};
+const addTodoBtn = document.getElementById("addTodo");
+if (addTodoBtn) {
+  addTodoBtn.onclick = function () {
+    const text = document.getElementById("todoText").value.trim();
+    if (!text) return;
+    todos.push({ text: text, done: false });
+    saveAll();
+    renderAll();
+    document.getElementById("todoText").value = "";
+  };
+}
 
 /* ---------- Money ---------- */
 function moneyRow(label, value, cls) {
@@ -307,7 +490,7 @@ function moneyRow(label, value, cls) {
 
 function payLabel(m) {
   if (m.pay === "loan") return "Loan to " + m.person;
-  return m.pay === "cashless" ? "Cashless" : "Cash";
+  return m.pay === "cashless" ? "Card" : "Cash";
 }
 
 function renderMoney() {
@@ -336,46 +519,50 @@ function renderMoney() {
   });
 
   const summary = document.getElementById("moneySummary");
-  summary.innerHTML = "";
-  summary.append(
-    moneyRow("Income", income, "plus"),
-    moneyRow("Spent", spent, "minus"),
-    moneyRow("Balance", income - spent, income - spent >= 0 ? "plus" : "minus"),
-    moneyRow("Spent in cash", cashSpent, ""),
-    moneyRow("Spent cashless", cashlessSpent, "")
-  );
+  if (summary) {
+    summary.innerHTML = "";
+    summary.append(
+      moneyRow("Income", income, "plus"),
+      moneyRow("Spent", spent, "minus"),
+      moneyRow("Balance", income - spent, income - spent >= 0 ? "plus" : "minus"),
+      moneyRow("Spent in cash", cashSpent, ""),
+      moneyRow("Spent cashless", cashlessSpent, "")
+    );
 
-  const note = document.createElement("div");
-  note.className = "rate-note";
-  note.textContent = "1 ₫ = " + rate.toFixed(4) + " Rp (" + rateStatus + ")";
-  summary.append(note);
+    const note = document.createElement("div");
+    note.className = "rate-note";
+    note.textContent = "1 ₫ = " + rate.toFixed(4) + " Rp (" + rateStatus + ")";
+    summary.append(note);
+  }
 
   const bars = document.getElementById("moneyBars");
-  bars.innerHTML = "";
-  Object.keys(byCat)
-    .sort(function (a, b) { return byCat[b] - byCat[a]; })
-    .forEach(function (cat) {
-      const wrap = document.createElement("div");
-      wrap.className = "bar-wrap";
+  if (bars) {
+    bars.innerHTML = "";
+    Object.keys(byCat)
+      .sort(function (a, b) { return byCat[b] - byCat[a]; })
+      .forEach(function (cat) {
+        const wrap = document.createElement("div");
+        wrap.className = "bar-wrap";
 
-      const label = document.createElement("div");
-      label.className = "bar-label";
-      const name = document.createElement("span");
-      name.textContent = cat;
-      const amt = document.createElement("span");
-      amt.textContent = fmt(byCat[cat]) + " (" + Math.round((byCat[cat] / spent) * 100) + "%)";
-      label.append(name, amt);
+        const label = document.createElement("div");
+        label.className = "bar-label";
+        const name = document.createElement("span");
+        name.textContent = cat;
+        const amt = document.createElement("span");
+        amt.textContent = fmt(byCat[cat]) + " (" + Math.round((byCat[cat] / spent) * 100) + "%)";
+        label.append(name, amt);
 
-      const bg = document.createElement("div");
-      bg.className = "bar-bg";
-      const fill = document.createElement("div");
-      fill.className = "bar-fill";
-      fill.style.width = (byCat[cat] / spent) * 100 + "%";
-      bg.append(fill);
+        const bg = document.createElement("div");
+        bg.className = "bar-bg";
+        const fill = document.createElement("div");
+        fill.className = "bar-fill";
+        fill.style.width = (byCat[cat] / spent) * 100 + "%";
+        bg.append(fill);
 
-      wrap.append(label, bg);
-      bars.append(wrap);
-    });
+        wrap.append(label, bg);
+        bars.append(wrap);
+      });
+  }
 
   renderLoans();
   renderMoneyList();
@@ -383,6 +570,7 @@ function renderMoney() {
 
 function renderLoans() {
   const box = document.getElementById("loanSummary");
+  if (!box) return;
   box.innerHTML = "";
 
   const loans = money.filter(function (m) { return m.pay === "loan"; });
@@ -427,6 +615,7 @@ function renderLoans() {
 
 function renderMoneyList() {
   const list = document.getElementById("moneyList");
+  if (!list) return;
   list.innerHTML = "";
 
   const dayNet = {};
@@ -533,22 +722,49 @@ function repay(m) {
 }
 
 function updatePayFields() {
-  const isLoan = document.getElementById("moneyPay").value === "loan";
-  document.getElementById("moneyPerson").classList.toggle("hidden", !isLoan);
-  document.getElementById("moneyType").classList.toggle("hidden", isLoan);
+  const payInput = document.getElementById("moneyPay");
+  const personInput = document.getElementById("moneyPerson");
+  const typeInput = document.getElementById("moneyType");
+  if (!payInput || !personInput || !typeInput) return;
+  const isLoan = payInput.value === "loan";
+  personInput.classList.toggle("hidden", !isLoan);
+  typeInput.classList.toggle("hidden", isLoan);
 }
-document.getElementById("moneyPay").onchange = updatePayFields;
+
+document.querySelectorAll(".pay-option").forEach(function (btn) {
+  btn.onclick = function () {
+    document.querySelectorAll(".pay-option").forEach(function (b) {
+      b.classList.remove("active");
+    });
+    btn.classList.add("active");
+    const payInput = document.getElementById("moneyPay");
+    if (payInput) payInput.value = btn.dataset.value;
+    updatePayFields();
+  };
+});
 
 function resetMoneyForm() {
   editingId = null;
-  document.getElementById("moneyTitle").value = "";
-  document.getElementById("moneyAmount").value = "";
-  document.getElementById("moneyPay").value = "cash";
-  document.getElementById("moneyPerson").value = "";
-  document.getElementById("moneyType").value = "expense";
-  document.getElementById("moneyDate").value = todayStr();
-  document.getElementById("addMoney").textContent = "Add";
-  document.getElementById("cancelMoney").classList.add("hidden");
+  const mTitle = document.getElementById("moneyTitle");
+  const mAmount = document.getElementById("moneyAmount");
+  const mPay = document.getElementById("moneyPay");
+  const mPerson = document.getElementById("moneyPerson");
+  const mType = document.getElementById("moneyType");
+  const mDate = document.getElementById("moneyDate");
+  const addBtn = document.getElementById("addMoney");
+  const cancelBtn = document.getElementById("cancelMoney");
+
+  if (mTitle) mTitle.value = "";
+  if (mAmount) mAmount.value = "";
+  document.querySelectorAll(".pay-option").forEach(function (b) {
+    b.classList.toggle("active", b.dataset.value === "cash");
+  });
+  if (mPay) mPay.value = "cash";
+  if (mPerson) mPerson.value = "";
+  if (mType) mType.value = "expense";
+  if (mDate) mDate.value = todayStr();
+  if (addBtn) addBtn.textContent = "Add";
+  if (cancelBtn) cancelBtn.classList.add("hidden");
   updatePayFields();
 }
 
@@ -556,6 +772,9 @@ function startEdit(m) {
   editingId = m.id;
   document.getElementById("moneyTitle").value = m.title;
   document.getElementById("moneyAmount").value = m.amount;
+  document.querySelectorAll(".pay-option").forEach(function (b) {
+    b.classList.toggle("active", b.dataset.value === m.pay);
+  });
   document.getElementById("moneyPay").value = m.pay;
   document.getElementById("moneyPerson").value = m.person || "";
   document.getElementById("moneyType").value = m.type;
@@ -567,58 +786,62 @@ function startEdit(m) {
   document.getElementById("moneyForm").scrollIntoView({ behavior: "smooth" });
 }
 
-document.getElementById("cancelMoney").onclick = resetMoneyForm;
+const cancelMoneyBtn = document.getElementById("cancelMoney");
+if (cancelMoneyBtn) cancelMoneyBtn.onclick = resetMoneyForm;
 
-document.getElementById("addMoney").onclick = function () {
-  const amount = parseFloat(document.getElementById("moneyAmount").value);
-  const pay = document.getElementById("moneyPay").value;
-  const person = document.getElementById("moneyPerson").value.trim();
-  const cat = document.getElementById("moneyCat").value;
-  const type = document.getElementById("moneyType").value;
-  const title = document.getElementById("moneyTitle").value.trim();
-  const date = document.getElementById("moneyDate").value || todayStr();
+const addMoneyBtn = document.getElementById("addMoney");
+if (addMoneyBtn) {
+  addMoneyBtn.onclick = function () {
+    const amount = parseFloat(document.getElementById("moneyAmount").value);
+    const pay = document.getElementById("moneyPay").value;
+    const person = document.getElementById("moneyPerson").value.trim();
+    const cat = document.getElementById("moneyCat").value;
+    const type = document.getElementById("moneyType").value;
+    const title = document.getElementById("moneyTitle").value.trim();
+    const date = document.getElementById("moneyDate").value || todayStr();
 
-  if (!amount || amount <= 0) {
-    alert("Please enter an amount above 0.");
-    return;
-  }
-  if (pay === "loan" && !person) {
-    alert("Please write who this loan is to.");
-    return;
-  }
-
-  const finalTitle = title || (pay === "loan" ? "Loan" : cat);
-
-  if (editingId) {
-    const m = money.find(function (x) { return x.id === editingId; });
-    if (m) {
-      m.title = finalTitle;
-      m.amount = amount;
-      m.type = type;
-      m.cat = cat;
-      m.date = date;
-      m.pay = pay;
-      m.person = pay === "loan" ? person : "";
-      m.paid = pay === "loan" ? Math.min(m.paid || 0, amount) : 0;
+    if (!amount || amount <= 0) {
+      alert("Please enter an amount above 0.");
+      return;
     }
-  } else {
-    money.push({
-      id: Date.now(),
-      title: finalTitle,
-      amount: amount,
-      type: type,
-      cat: cat,
-      date: date,
-      pay: pay,
-      person: pay === "loan" ? person : "",
-      paid: 0
-    });
-  }
+    if (pay === "loan" && !person) {
+      alert("Please write who this loan is to.");
+      return;
+    }
 
-  saveAll();
-  resetMoneyForm();
-  renderAll();
-};
+    const finalTitle = title || (pay === "loan" ? "Loan" : cat);
+
+    if (editingId) {
+      const m = money.find(function (x) { return x.id === editingId; });
+      if (m) {
+        m.title = finalTitle;
+        m.amount = amount;
+        m.type = type;
+        m.cat = cat;
+        m.date = date;
+        m.pay = pay;
+        m.person = pay === "loan" ? person : "";
+        m.paid = pay === "loan" ? Math.min(m.paid || 0, amount) : 0;
+      }
+    } else {
+      money.push({
+        id: Date.now(),
+        title: finalTitle,
+        amount: amount,
+        type: type,
+        cat: cat,
+        date: date,
+        pay: pay,
+        person: pay === "loan" ? person : "",
+        paid: 0
+      });
+    }
+
+    saveAll();
+    resetMoneyForm();
+    renderAll();
+  };
+}
 
 /* ---------- Countdown ---------- */
 function updateTimes() {
@@ -655,6 +878,7 @@ function renderBalance() {
   });
 
   const box = document.getElementById("balanceBox");
+  if (!box) return;
   box.innerHTML = "";
   box.append(
     moneyRow("Cash", cash, cash >= 0 ? "plus" : "minus"),
@@ -666,6 +890,7 @@ function renderBalance() {
 /* ---------- Calendar & Reminders ---------- */
 function renderCalendar() {
   const grid = document.getElementById("calGrid");
+  if (!grid) return;
   grid.innerHTML = "";
   document.getElementById("calTitle").textContent = new Date(calYear, calMonth, 1)
     .toLocaleDateString(undefined, { month: "long", year: "numeric" });
@@ -743,7 +968,9 @@ function renderCalendar() {
 }
 
 function renderDayPanel() {
-  const card = document.getElementById("calGrid").parentElement;
+  const gridEl = document.getElementById("calGrid");
+  if (!gridEl) return;
+  const card = gridEl.parentElement;
   let panel = document.getElementById("dayPanel");
   if (!panel) {
     panel = document.createElement("div");
@@ -851,6 +1078,7 @@ function renderReminder() {
 
   ["page-home", "page-schedule"].forEach(function (id) {
     const page = document.getElementById(id);
+    if (!page) return;
     let box = page.querySelector(".reminder");
     if (!box) {
       box = document.createElement("div");
@@ -875,16 +1103,22 @@ function renderReminder() {
   });
 }
 
-document.getElementById("calPrev").onclick = function () {
-  calMonth--;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  renderCalendar();
-};
-document.getElementById("calNext").onclick = function () {
-  calMonth++;
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  renderCalendar();
-};
+const calPrevBtn = document.getElementById("calPrev");
+if (calPrevBtn) {
+  calPrevBtn.onclick = function () {
+    calMonth--;
+    if (calMonth < 0) { calMonth = 11; calYear--; }
+    renderCalendar();
+  };
+}
+const calNextBtn = document.getElementById("calNext");
+if (calNextBtn) {
+  calNextBtn.onclick = function () {
+    calMonth++;
+    if (calMonth > 11) { calMonth = 0; calYear++; }
+    renderCalendar();
+  };
+}
 
 /* Combined Render Trigger */
 function renderAll() {
@@ -901,5 +1135,7 @@ function renderAll() {
 
 resetMoneyForm();
 setInterval(updateTimes, 1000);
+setInterval(updateLiveClock, 1000);
+updateLiveClock();
 renderAll();
 fetchRate();
