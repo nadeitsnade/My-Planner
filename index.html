@@ -140,6 +140,10 @@
   <div id="moneyList"></div>
 </div>
 
-<script>window.onerror = function (m, s, l) { document.body.insertAdjacentHTML("afterbegin", "<pre style='background:#fdd;color:#900;padding:8px'>" + m + " (line " + l + ")</pre>"); };</script>
+<script src="window.onerror = function (m, s, l) { document.body.insertAdjacentHTML("afterbegin", "<pre style='background:#fdd;color:#900;padding:8px'>" + m + " (line " + l + ")</pre>"); };</script>
 
+<!-- Add this line so the browser can read Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- Your script file comes after it -->
 <script src="script.js"></script>
