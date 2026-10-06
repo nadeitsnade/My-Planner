@@ -9,6 +9,10 @@ let todos = JSON.parse(localStorage.getItem("todos") || "[]");
 let money = JSON.parse(localStorage.getItem("money") || "[]");
 let editingId = null;
 
+var calYear = new Date().getFullYear();
+var calMonth = new Date().getMonth();
+var selectedDay = null;
+
 /* Give older money entries the new fields */
 money.forEach(function (m, i) {
   if (!m.id) m.id = Date.now() + i;
@@ -54,6 +58,10 @@ function parseDate(str) {
   return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
 }
 
+function ymd(y, m, d) {
+  return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
+}
+
 /* ---------- Currency ---------- */
 function fmt(n) {
   return Math.round(n).toLocaleString("vi-VN") + " ₫";
@@ -74,9 +82,7 @@ function fetchRate() {
         renderAll();
       }
     })
-    .catch(function () {
-      /* no internet or blocked: keep the saved or default rate */
-    });
+    .catch(function () {});
 }
 
 /* ---------- Tabs ---------- */
@@ -634,19 +640,6 @@ function updateTimes() {
   });
 }
 
-function renderAll() {
-  renderHome();
-  renderSchedule();
-  renderNotes();
-  renderTodos();
-  renderMoney();
-  updateTimes();
-}
-
-resetMoneyForm();
-setInterval(updateTimes, 1000);
-renderAll();
-fetchRate();
 function renderBalance() {
   let cash = 0;
   let cashless = 0;
@@ -670,17 +663,7 @@ function renderBalance() {
   );
 }
 
-/* make the page redraw the wallet every time it redraws everything else */
-const oldRenderAll = renderAll;
-renderAll = function () {
-  oldRenderAll();
-  renderBalance();
-};
-renderBalance();
-/* ---------- Calendar v2: "!" mark, sticky notes, day panel ---------- */
-var selectedDay = null;
-
-/* This replaces the older renderCalendar above. The later one wins, so you can leave the old one. */
+/* ---------- Calendar & Reminders ---------- */
 function renderCalendar() {
   const grid = document.getElementById("calGrid");
   grid.innerHTML = "";
@@ -856,73 +839,6 @@ function renderDayPanel() {
   panel.append(form);
 }
 
-renderCalendar();
-
-var calYear = new Date().getFullYear();
-var calMonth = new Date().getMonth();
-
-function ymd(y, m, d) {
-  return y + "-" + String(m + 1).padStart(2, "0") + "-" + String(d).padStart(2, "0");
-}
-
-function renderCalendar() {
-  const grid = document.getElementById("calGrid");
-  grid.innerHTML = "";
-  document.getElementById("calTitle").textContent = new Date(calYear, calMonth, 1)
-    .toLocaleDateString(undefined, { month: "long", year: "numeric" });
-
-  ["M", "T", "W", "T", "F", "S", "S"].forEach(function (d) {
-    const h = document.createElement("div");
-    h.className = "cal-dow";
-    h.textContent = d;
-    grid.append(h);
-  });
-
-  const offset = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
-  for (let i = 0; i < offset; i++) {
-    grid.append(document.createElement("div"));
-  }
-
-  const days = new Date(calYear, calMonth + 1, 0).getDate();
-  const now = new Date();
-  const todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  for (let d = 1; d <= days; d++) {
-    const key = ymd(calYear, calMonth, d);
-    const dayTasks = tasks.filter(function (t) { return t.due.slice(0, 10) === key; });
-    const open = dayTasks.filter(function (t) { return !t.done; });
-    const diff = Math.round((new Date(calYear, calMonth, d) - todayMid) / 86400000);
-
-    const cell = document.createElement("div");
-    cell.className = "cal-cell";
-    if (diff === 0) cell.classList.add("today");
-    if (open.length > 0) {
-      let heat = "heat-4";
-      if (diff < 0) heat = "heat-past";
-      else if (diff === 0) heat = "heat-0";
-      else if (diff === 1) heat = "heat-1";
-      else if (diff <= 3) heat = "heat-2";
-      else if (diff <= 7) heat = "heat-3";
-      cell.classList.add(heat);
-    }
-
-    const num = document.createElement("span");
-    num.textContent = d;
-    const icon = document.createElement("span");
-    icon.className = "cal-icon";
-    icon.textContent = open.length > 0 ? "★" : dayTasks.length > 0 ? "✓" : "";
-    cell.append(num, icon);
-
-    cell.onclick = function () {
-      document.getElementById("taskDue").value = key + "T09:00";
-      const t = document.getElementById("taskTitle");
-      t.scrollIntoView({ behavior: "smooth", block: "center" });
-      t.focus();
-    };
-    grid.append(cell);
-  }
-}
-
 function renderReminder() {
   const now = new Date();
   const limit = new Date(now.getTime() + 3 * 86400000);
@@ -970,11 +886,20 @@ document.getElementById("calNext").onclick = function () {
   renderCalendar();
 };
 
-const oldRenderAll2 = renderAll;
-renderAll = function () {
-  oldRenderAll2();
+/* Combined Render Trigger */
+function renderAll() {
+  renderHome();
+  renderSchedule();
+  renderNotes();
+  renderTodos();
+  renderMoney();
+  renderBalance();
   renderCalendar();
   renderReminder();
-};
-renderCalendar();
-renderReminder();
+  updateTimes();
+}
+
+resetMoneyForm();
+setInterval(updateTimes, 1000);
+renderAll();
+fetchRate();
