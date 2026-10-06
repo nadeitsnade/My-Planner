@@ -246,4 +246,107 @@ h1 {
 #cancelMoney {
   background: #ffd6d6;
 }
+.reminder {
+  background: #ffd6a5;
+  border: 3px solid #2d3a4a;
+  box-shadow: 4px 4px 0 #2d3a4a;
+  padding: 12px;
+  margin-bottom: 16px;
+}
+.cal-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.cal-head h3 { margin: 0; }
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+.cal-dow {
+  text-align: center;
+  font-family: "Silkscreen", monospace;
+  font-size: 12px;
+}
+.cal-cell {
+  aspect-ratio: 1;
+  background: white;
+  border: 2px solid #2d3a4a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-size: 18px;
+}
+.cal-cell.today { outline: 3px solid #2d3a4a; outline-offset: 1px; }
+.cal-icon { font-size: 16px; line-height: 1; min-height: 16px; }
+.cal-cell.heat-0 { background: #ff9b8a; }
+.cal-cell.heat-1 { background: #ffb98a; }
+.cal-cell.heat-2 { background: #ffd98a; }
+.cal-cell.heat-3 { background: #fff3a8; }
+.cal-cell.heat-4 { background: #b5d8f7; }
+.cal-cell.heat-past { background: #e3e3e3; color: #888; }
+.cal-cell {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  align-items: stretch;
+  justify-content: flex-start;
+  padding: 2px;
+}
+.cal-cell.selected { outline: 3px dashed #2d3a4a; outline-offset: 1px; }
+.cal-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.cal-mark {
+  font-family: "Silkscreen", monospace;
+  font-size: 24px;
+  line-height: 1;
+}
+.cal-mark.warn { color: #d9534f; }
+.cal-mark.ok { color: #1f6b3a; font-size: 18px; }
 
+.sticky {
+  font-size: 14px;
+  line-height: 1.1;
+  padding: 1px 3px;
+  margin-top: 2px;
+  color: #2d3a4a;
+  border: 1px solid #2d3a4a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transform: rotate(-2deg);
+}
+.sticky.s0, .note-row.s0 { background: #fff3a8; }
+.sticky.s1, .note-row.s1 { background: #c8f0c8; }
+.sticky.s2, .note-row.s2 { background: #b5d8f7; }
+.sticky.done { text-decoration: line-through; opacity: 0.6; }
+.cal-more { font-size: 14px; text-align: right; }
+
+.note-row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: 3px solid #2d3a4a;
+  box-shadow: 3px 3px 0 #2d3a4a;
+}
+.note-row input[type="checkbox"] {
+  width: 24px;
+  height: 24px;
+  accent-color: #2d3a4a;
+}
+.day-form {
+  box-shadow: none;
+  border: none;
+  padding: 0;
+  margin: 12px 0 0;
+  background: transparent;
+}
