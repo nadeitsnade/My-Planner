@@ -1,1 +1,97 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+<h1>My Planner</h1>
+
+<div class="tabs">
+  <button class="tab active" data-page="home">Home</button>
+  <button class="tab" data-page="schedule">Schedule</button>
+  <button class="tab" data-page="notes">Notes</button>
+  <button class="tab" data-page="todo">To-do</button>
+  <button class="tab" data-page="money">Money</button>
+</div>
+
+<div id="page-home" class="page">
+  <div class="card"><h2 id="today"></h2></div>
+  <div class="card">
+    <h3>Up next</h3>
+    <div id="next"></div>
+  </div>
+  <div class="card">
+    <h3>Progress</h3>
+    <div id="stats"></div>
+  </div>
+</div>
+
+<div id="page-schedule" class="page hidden">
+  <div class="form">
+    <input id="taskTitle" placeholder="Title">
+    <input id="taskDue" type="datetime-local">
+    <textarea id="taskNotes" placeholder="Notes"></textarea>
+    <button id="addTask">Add</button>
+  </div>
+  <div id="list"></div>
+</div>
+
+<div id="page-notes" class="page hidden">
+  <div class="form">
+    <input id="noteTitle" placeholder="Note title">
+    <textarea id="noteText" placeholder="Write your note..."></textarea>
+    <button id="addNote">Save note</button>
+  </div>
+  <div id="noteList"></div>
+</div>
+
+<div id="page-todo" class="page hidden">
+  <div class="form">
+    <input id="todoText" placeholder="New to-do">
+    <button id="addTodo">Add</button>
+  </div>
+  <div id="todoList"></div>
+</div>
+
+<div id="page-money" class="page hidden">
+  <div class="card">
+    <h3>This month</h3>
+    <div id="moneySummary"></div>
+    <div id="moneyBars"></div>
+  </div>
+
+  <div class="card loan-card">
+    <h3>Loans</h3>
+    <div id="loanSummary"></div>
+  </div>
+
+  <div class="form" id="moneyForm">
+    <input id="moneyTitle" placeholder="What for?">
+    <input id="moneyAmount" type="number" inputmode="decimal" placeholder="Amount in VND">
+    <select id="moneyPay">
+      <option value="cash">Cash</option>
+      <option value="cashless">Cashless</option>
+      <option value="loan">Loan</option>
+    </select>
+    <input id="moneyPerson" class="hidden" placeholder="Loan to who? (name)">
+    <select id="moneyType">
+      <option value="expense">Expense</option>
+      <option value="income">Income</option>
+    </select>
+    <select id="moneyCat">
+      <option>Food</option>
+      <option>Transport</option>
+      <option>Shopping</option>
+      <option>Bills</option>
+      <option>Fun</option>
+      <option>Salary</option>
+      <option>Gift</option>
+      <option>Other</option>
+    </select>
+    <input id="moneyDate" type="date">
+    <button id="addMoney">Add</button>
+    <button id="cancelMoney" class="hidden">Cancel edit</button>
+  </div>
+
+  <div id="moneyList"></div>
+</div>
+
+<script src="script.js"></script>
 
