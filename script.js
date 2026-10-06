@@ -1,3 +1,8 @@
+const SUPABASE_URL = 'https://wizndbnlojjpcaeudizx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xkAfsN5vGx_GdMJLx-yMEA_HrDcQvdf';
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 const FALLBACK_RATE = 0.68; // 1 VND is about 0.68 IDR
 
 let rate = parseFloat(localStorage.getItem("vndIdrRate")) || FALLBACK_RATE;
