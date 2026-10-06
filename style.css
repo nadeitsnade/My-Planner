@@ -24,6 +24,7 @@ h1 {
 
 .tabs {
   display: flex;
+  justify-content: center;
   gap: 10px;
   margin: 20px 0;
   overflow-x: auto;
@@ -349,4 +350,269 @@ h1 {
   padding: 0;
   margin: 12px 0 0;
   background: transparent;
+}
+.pay-btn-group {
+  display: flex;
+  gap: 8px;
+}
+
+.pay-option {
+  flex: 1;
+  font-family: "Silkscreen", monospace;
+  font-size: 11px;
+  padding: 10px 6px;
+  background: white;
+  color: #2d3a4a;
+  border: 3px solid #2d3a4a;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #2d3a4a;
+  cursor: pointer;
+  text-align: center;
+}
+
+.pay-option:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+.pay-option.active {
+  background: #2d3a4a;
+  color: white;
+  box-shadow: none;
+  transform: translate(2px, 2px);
+}
+.retro-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #b5d8f7;
+  border: 3px solid #2d3a4a;
+  box-shadow: 4px 4px 0 #2d3a4a;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+}
+
+.retro-header h1 {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+  font-size: 20px;
+}
+
+.header-title-wrap {
+  flex: 1;
+}
+
+.header-badge {
+  font-size: 24px;
+  background: white;
+  border: 2px solid #2d3a4a;
+  padding: 4px 8px;
+  box-shadow: 2px 2px 0 #2d3a4a;
+}
+
+.retro-clock {
+  font-size: 16px;
+  color: #4a5a6a;
+  margin-top: 2px;
+  font-family: "VT323", monospace;
+}
+#spendingMoodCard {
+  background: #fff3a8;
+  text-align: center;
+}
+
+.mood-avatar {
+  font-size: 48px;
+  margin: 10px 0;
+  transition: transform 0.3s ease;
+}
+
+.monthly-total {
+  font-family: "Silkscreen", monospace;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: #2d3a4a;
+}
+
+.mood-msg {
+  font-size: 20px;
+  margin-bottom: 12px;
+  color: #4a5a6a;
+}
+
+#topCategoriesList {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.top-cat-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 18px;
+  background: white;
+  border: 2px solid #2d3a4a;
+  padding: 4px 8px;
+}
+/* --- Retro Pixel Button Style --- */
+.retro-btn {
+  font-family: "Silkscreen", monospace;
+  background: #fff;
+  border: 2px solid #2d3a4a;
+  box-shadow: 3px 3px 0px #2d3a4a;
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 12px;
+  text-transform: uppercase;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.retro-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #2d3a4a;
+}
+
+.retro-btn.secondary {
+  background: #ffd6a5;
+}
+
+/* --- Theme-matching Modal --- */
+.modal {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(45, 58, 74, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: #fff9c4;
+  border: 3px solid #2d3a4a;
+  box-shadow: 6px 6px 0px #2d3a4a;
+  padding: 24px;
+  width: 90%;
+  max-width: 480px;
+}
+
+.modal-content h3 {
+  font-family: "Silkscreen", monospace;
+  font-size: 16px;
+  margin-top: 0;
+  margin-bottom: 14px;
+  color: #2d3a4a;
+}
+
+.modal-content input, 
+.modal-content textarea {
+  width: 100%;
+  border: 2px solid #2d3a4a;
+  background: #fff;
+  padding: 10px;
+  margin-bottom: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.modal-content textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+/* --- Sticky Note Enhancements --- */
+.sticky-note {
+  background: #fff9c4;
+  border: 2px solid #2d3a4a;
+  padding: 14px;
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 4px 4px 0px #2d3a4a;
+  position: relative;
+  transition: transform 0.2s ease;
+}
+
+.sticky-note:hover {
+  transform: translateY(-3px);
+}
+
+.sticky-note:nth-child(3n+1) { background: #fff9c4; }
+.sticky-note:nth-child(3n+2) { background: #c8e6c9; }
+.sticky-note:nth-child(3n+3) { background: #ffccbc; }
+
+.sticky-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  border-bottom: 2px dashed rgba(45, 58, 74, 0.2);
+  padding-bottom: 6px;
+}
+
+.sticky-header strong {
+  font-family: "Silkscreen", monospace;
+  font-size: 13px;
+  word-break: break-all;
+  color: #2d3a4a;
+}
+
+.sticky-actions-group {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.small-edit-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 12px;
+  padding: 2px 4px;
+  color: #2d3a4a;
+  font-family: "Silkscreen", monospace;
+}
+
+.small-edit-btn:hover {
+  text-decoration: underline;
+}
+
+.sticky-body {
+  font-size: 14px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-y: auto;
+  max-height: 110px;
+  flex-grow: 1;
+  color: #333;
+}
+
+.sticky-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(45, 58, 74, 0.2);
+  font-size: 10px;
+  font-family: "Silkscreen", monospace;
+  color: #555;
 }
