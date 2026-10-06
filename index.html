@@ -24,6 +24,15 @@
 </div>
 
 <div id="page-schedule" class="page hidden">
+    <div class="card">
+    <div class="cal-head">
+      <button id="calPrev" class="small-btn">‹</button>
+      <h3 id="calTitle"></h3>
+      <button id="calNext" class="small-btn">›</button>
+    </div>
+    <div id="calGrid" class="cal-grid"></div>
+    <div class="rate-note">★ = has a schedule. Warmer color = closer date. Tap a day to start a task on it.</div>
+  </div>
   <div class="form">
     <input id="taskTitle" placeholder="Title">
     <input id="taskDue" type="datetime-local">
@@ -97,5 +106,6 @@
   <div id="moneyList"></div>
 </div>
 
-<script src="script.js"></script>
+<script>window.onerror = function (m, s, l) { document.body.insertAdjacentHTML("afterbegin", "<pre style='background:#fdd;color:#900;padding:8px'>" + m + " (line " + l + ")</pre>"); };</script>
 
+<script src="script.js"></script>
