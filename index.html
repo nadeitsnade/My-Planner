@@ -1,7 +1,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="style.css">
-<h1>My Planner</h1>
+<header class="retro-header">
+  <div class="header-badge">🕹️</div>
+  <div class="header-title-wrap">
+    <h1>MY PLANNER</h1>
+    <div id="liveClock" class="retro-clock">Loading time...</div>
+  </div>
+  <div class="header-badge">⭐</div>
+</header>
+
 
 <div class="tabs">
   <button class="tab active" data-page="home">Home</button>
@@ -21,6 +29,16 @@
     <h3>Progress</h3>
     <div id="stats"></div>
   </div>
+  <div class="card" id="spendingMoodCard">
+  <h2>⚡ SPENT T</h2>
+  <div id="moodAvatar" class="mood-avatar">😎</div>
+  <div id="monthlyTotalDisplay" class="monthly-total">Spent: 0 ₫</div>
+  <div id="moodMessage" class="mood-msg">Feeling rich and chill.</div>
+  
+  <div class="sub-title">Top 3 Drains:</div>
+  <div id="topCategoriesList"></div>
+</div>
+
 </div>
 
 <div id="page-schedule" class="page hidden">
@@ -42,13 +60,27 @@
   <div id="list"></div>
 </div>
 
-<div id="page-notes" class="page hidden">
-  <div class="form">
-    <input id="noteTitle" placeholder="Note title">
-    <textarea id="noteText" placeholder="Write your note..."></textarea>
-    <button id="addNote">Save note</button>
+<div class="page hidden" id="page-notes">
+  <div class="section-header">
+    <h2>📌 NOTES</h2>
+    <button class="retro-btn" id="openNoteModalBtn">+ Add Note</button>
   </div>
-  <div id="noteList"></div>
+
+  <!-- Note Grid Container -->
+  <div id="noteList" class="note-grid"></div>
+
+  <!-- Modal Popup for Adding/Editing Notes -->
+  <div id="noteModal" class="modal hidden">
+    <div class="modal-content card">
+      <h3 id="noteModalTitle">New Note</h3>
+      <input type="text" id="noteTitle" placeholder="Note Title..." />
+      <textarea id="noteText" placeholder="Write your thoughts here..."></textarea>
+      <div class="modal-buttons">
+        <button id="addNote" class="retro-btn">Save Note</button>
+        <button id="closeNoteModal" class="retro-btn secondary">Cancel</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="page-todo" class="page hidden">
@@ -78,11 +110,13 @@
   <div class="form" id="moneyForm">
     <input id="moneyTitle" placeholder="What for?">
     <input id="moneyAmount" type="number" inputmode="decimal" placeholder="Amount in VND">
-    <select id="moneyPay">
-      <option value="cash">Cash</option>
-      <option value="cashless">Cashless</option>
-      <option value="loan">Loan</option>
-    </select>
+    <div class="pay-btn-group" id="payButtonGroup">
+  <button type="button" class="pay-option active" data-value="cash">💵 Cash</button>
+  <button type="button" class="pay-option" data-value="cashless">💳 Card</button>
+  <button type="button" class="pay-option" data-value="loan">🤝 Loan</button>
+</div>
+<!-- Hidden input to keep track of the selected value for your script -->
+<input type="hidden" id="moneyPay" value="cash">
     <input id="moneyPerson" class="hidden" placeholder="Loan to who? (name)">
     <select id="moneyType">
       <option value="expense">Expense</option>
