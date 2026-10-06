@@ -26,11 +26,51 @@ money.forEach(function (m, i) {
   if (m.person === undefined) m.person = "";
 });
 
-function saveAll() {
+/* ---------- Supabase & Cloud Sync Setup ---------- */
+const SUPABASE_URL = 'https://wizndbnlojjpcaeudizx.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xkAfsN5vGx_GdMJLx-yMEA_HrDcQvdf';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+async function saveAll() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
   localStorage.setItem("notes", JSON.stringify(notes));
   localStorage.setItem("todos", JSON.stringify(todos));
   localStorage.setItem("money", JSON.stringify(money));
+
+  try {
+    await supabaseClient.from('planner_data').upsert([
+      { id: 'tasks', category: 'tasks', content: tasks, updated_at: new Date() },
+      { id: 'notes', category: 'notes', content: notes, updated_at: new Date() },
+      { id: 'todos', category: 'todos', content: todos, updated_at: new Date() },
+      { id: 'money', category: 'money', content: money, updated_at: new Date() }
+    ]);
+  } catch (err) {
+    console.error("Cloud sync save error:", err);
+  }
+}
+
+async function loadAllFromCloud() {
+  try {
+    const { data, error } = await supabaseClient.from('planner_data').select('*');
+    if (data && !error && data.length > 0) {
+      data.forEach(function (row) {
+        if (row.id === 'tasks') tasks = row.content || [];
+        if (row.id === 'notes') notes = row.content || [];
+        if (row.id === 'todos') todos = row.content || [];
+        if (row.id === 'money') money = row.content || [];
+      });
+      
+      localStorage.setItem("tasks", JSON.stringify(tasks));
+      localStorage.setItem("notes", JSON.stringify(notes));
+      localStorage.setItem("todos", JSON.stringify(todos));
+      localStorage.setItem("money", JSON.stringify(money));
+      
+      renderAll();
+    }
+  } catch (err) {
+    console.error("Cloud sync load error:", err);
+  }
+}
 }
 
 function makeDelete(onClick) {
@@ -1137,6 +1177,16 @@ function renderAll() {
   renderReminder();
   updateTimes();
 }
+loadAllFromCloud();⁠ 
+resetMoneyForm();
+setInterval(updateTimes, 1000);
+setInterval(updateLiveClock, 1000);
+updateLiveClock();
+renderAll();
+fetchRate();
+
+// Pull latest cloud data on startup!
+loadAllFromCloud();
 
 resetMoneyForm();
 setInterval(updateTimes, 1000);
