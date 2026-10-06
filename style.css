@@ -1,1 +1,249 @@
+@import url("https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap");
+
+body {
+  font-family: "VT323", monospace;
+  font-size: 22px;
+  background: #fffbe0;
+  color: #2d3a4a;
+  padding: 20px;
+}
+
+h1, h2, h3, .tab, .form button {
+  font-family: "Silkscreen", monospace;
+}
+
+h1 {
+  font-size: 24px;
+  color: #2d3a4a;
+  background: #b5d8f7;
+  border: 3px solid #2d3a4a;
+  box-shadow: 4px 4px 0 #2d3a4a;
+  padding: 14px;
+  text-align: center;
+}
+
+.tabs {
+  display: flex;
+  gap: 10px;
+  margin: 20px 0;
+  overflow-x: auto;
+  padding: 4px 4px 8px 4px;
+}
+
+.tab {
+  font-size: 14px;
+  padding: 12px 14px;
+  color: #2d3a4a;
+  border: 3px solid #2d3a4a;
+  box-shadow: 3px 3px 0 #2d3a4a;
+  border-radius: 0;
+}
+.tab:nth-child(3n+1) { background: #c8f0c8; }
+.tab:nth-child(3n+2) { background: #fff3a8; }
+.tab:nth-child(3n+3) { background: #b5d8f7; }
+.tab.active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+  background: #2d3a4a;
+  color: white;
+}
+
+.hidden {
+  display: none;
+}
+
+.card, .task, .form {
+  border: 3px solid #2d3a4a;
+  box-shadow: 4px 4px 0 #2d3a4a;
+  border-radius: 0;
+  padding: 14px;
+  margin-bottom: 16px;
+}
+
+.card h2, .card h3 {
+  margin-top: 0;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+#page-home .card:nth-child(1) { background: #c8f0c8; }
+#page-home .card:nth-child(2) { background: #fff3a8; }
+#page-home .card:nth-child(3) { background: #b5d8f7; }
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fff3a8;
+}
+
+.form input, .form textarea, .form select {
+  font-family: "VT323", monospace;
+  font-size: 22px;
+  padding: 10px;
+  border: 3px solid #2d3a4a;
+  border-radius: 0;
+  background: white;
+  color: #2d3a4a;
+}
+
+.form button {
+  font-size: 14px;
+  padding: 14px;
+  background: #c8f0c8;
+  color: #2d3a4a;
+  border: 3px solid #2d3a4a;
+  box-shadow: 3px 3px 0 #2d3a4a;
+  border-radius: 0;
+}
+.form button:active {
+  transform: translate(3px, 3px);
+  box-shadow: none;
+}
+
+.task {
+  display: flex;
+  gap: 12px;
+}
+#list .task:nth-child(3n+1),
+#noteList .task:nth-child(3n+1),
+#todoList .task:nth-child(3n+1),
+#moneyList .task:nth-child(3n+1) { background: #c8f0c8; }
+#list .task:nth-child(3n+2),
+#noteList .task:nth-child(3n+2),
+#todoList .task:nth-child(3n+2),
+#moneyList .task:nth-child(3n+2) { background: #fff3a8; }
+#list .task:nth-child(3n+3),
+#noteList .task:nth-child(3n+3),
+#todoList .task:nth-child(3n+3),
+#moneyList .task:nth-child(3n+3) { background: #b5d8f7; }
+
+.task input {
+  width: 26px;
+  height: 26px;
+  accent-color: #2d3a4a;
+}
+
+.info {
+  flex: 1;
+}
+
+.when {
+  color: #4a5a6a;
+  font-size: 20px;
+}
+
+.notes {
+  white-space: pre-wrap;
+  margin: 4px 0;
+}
+
+.left {
+  color: #1f6b3a;
+  font-weight: bold;
+}
+
+.del {
+  border: none;
+  background: none;
+  font-family: "Silkscreen", monospace;
+  font-size: 18px;
+  color: #d9534f;
+}
+
+.done {
+  opacity: 0.55;
+}
+.done strong, .done span {
+  text-decoration: line-through;
+}
+
+.mini {
+  padding: 8px 0;
+  border-bottom: 3px dashed #2d3a4a;
+}
+
+/* ---------- Money ---------- */
+#page-money .card {
+  background: #c8f0c8;
+}
+
+.money-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+.plus { color: #1f6b3a; font-weight: bold; }
+.minus { color: #d9534f; font-weight: bold; }
+
+.idr {
+  font-size: 18px;
+  color: #4a5a6a;
+  font-weight: normal;
+}
+.rate-note {
+  font-size: 18px;
+  color: #4a5a6a;
+  margin-top: 8px;
+}
+
+.bar-wrap { margin: 12px 0; }
+.bar-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.bar-bg {
+  background: white;
+  border: 3px solid #2d3a4a;
+  height: 20px;
+}
+.bar-fill {
+  height: 100%;
+  background: #b5d8f7;
+}
+.day-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2d3a4a;
+  color: white;
+  font-family: "Silkscreen", monospace;
+  font-size: 14px;
+  padding: 10px 12px;
+  margin: 24px 0 12px;
+}
+
+#page-money #moneyList .task.pay-cash { background: #c8f0c8; }
+#page-money #moneyList .task.pay-cashless { background: #b5d8f7; }
+#page-money #moneyList .task.pay-loan { background: #fff3a8; }
+#page-money .loan-card { background: #fff3a8; }
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.small-btn {
+  font-family: "Silkscreen", monospace;
+  font-size: 11px;
+  padding: 6px 8px;
+  background: white;
+  color: #2d3a4a;
+  border: 3px solid #2d3a4a;
+  border-radius: 0;
+  box-shadow: 2px 2px 0 #2d3a4a;
+}
+
+.sub-title {
+  font-family: "Silkscreen", monospace;
+  font-size: 12px;
+  margin: 12px 0 4px;
+}
+
+#cancelMoney {
+  background: #ffd6d6;
+}
 
