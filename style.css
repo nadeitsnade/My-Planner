@@ -271,3 +271,61 @@ body {
   #moneyForm { grid-column: span 7; order: 4; }
   #moneyList { grid-column: 1 / -1; order: 5; }
 }
+/* ===== Fit v3: boxes sit side by side only when they fit ===== */
+
+/* Date and time inputs stay inside their box on iPhone and iPad */
+input[type="date"], input[type="time"], input[type="datetime-local"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 54px;
+  text-align: left;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value,
+input[type="datetime-local"]::-webkit-date-and-time-value {
+  text-align: left;
+}
+
+/* Text wraps instead of getting cut off */
+.money-row, .top-row { flex-wrap: wrap; gap: 0 12px; }
+
+/* Each box has its own minimum width. It sits beside another box only if both fit. */
+#page-home, #page-schedule, #page-money {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+#page-schedule, #page-money { align-items: flex-start; }
+#page-home > *, #page-schedule > *, #page-money > * {
+  margin: 0;
+  min-width: 0;
+  order: 0;
+  flex: 1 1 280px;
+}
+#page-home > .card:nth-of-type(odd), #page-home > .card:nth-of-type(even),
+#page-money > .card:nth-of-type(odd), #page-money > .card:nth-of-type(even) { margin: 0; }
+#page-home > .c-green, #page-home > .c-yellow, #page-home > .c-blue, #moodCard,
+#page-money > .c-green, #page-money > .c-yellow, #page-money > .c-blue,
+#moneyForm, #moneyList { order: 0; }
+
+#page-home > .reminder, #page-schedule > .reminder { flex: 1 1 100%; }
+#page-home > .c-green { flex: 2 1 400px; }
+#page-home > .c-yellow { flex: 1 1 260px; }
+#page-home > .c-blue { flex: 1 1 140px; }
+#moodCard { flex: 1 1 190px; }
+
+#page-schedule > .card:not(#dayPanel) { flex: 2 1 420px; }
+#dayPanel { flex: 1 1 280px; }
+#page-schedule > .form { flex: 1 1 280px; }
+#list { flex: 1 1 100%; }
+
+#page-money > .c-green { flex: 1 1 300px; }
+#page-money > .c-blue { flex: 1 1 300px; }
+#page-money > .c-yellow { flex: 1 1 260px; }
+#moneyForm { flex: 1 1 320px; }
+#moneyList { flex: 1 1 100%; }
+
