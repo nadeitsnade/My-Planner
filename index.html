@@ -1,15 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Planner</title>
 <link rel="stylesheet" href="style.css">
+</head>
+<body>
 <header class="retro-header">
-  <div class="header-badge">🕹️</div>
-  <div class="header-title-wrap">
-    <h1>MY PLANNER</h1>
-    <div id="liveClock" class="retro-clock">Loading time...</div>
-  </div>
-  <div class="header-badge">⭐</div>
+  <div class="badge">🕹️</div>
+  <div class="grow"><h1>MY PLANNER</h1><div id="clock" class="clock"></div></div>
+  <div class="badge">⭐</div>
 </header>
-
 
 <div class="tabs">
   <button class="tab active" data-page="home">Home</button>
@@ -20,37 +22,30 @@
 </div>
 
 <div id="page-home" class="page">
-  <div class="card"><h2 id="today"></h2></div>
-  <div class="card">
-    <h3>Up next</h3>
-    <div id="next"></div>
+  <div class="card c-green"><h2 id="today"></h2></div>
+  <div class="card c-yellow"><h3>Up next</h3><div id="next"></div></div>
+  <div class="card c-blue"><h3>Progress</h3><div id="stats"></div></div>
+  <div class="card" id="moodCard">
+    <h3>⚡ Spent this month</h3>
+    <div id="moodFace" class="face">😎</div>
+    <div id="moodTotal" class="total"></div>
+    <div id="moodMsg"></div>
+    <div class="sub">Top 3 drains</div>
+    <div id="topCats"></div>
   </div>
-  <div class="card">
-    <h3>Progress</h3>
-    <div id="stats"></div>
-  </div>
-  <div class="card" id="spendingMoodCard">
-  <h2>⚡ SPENT T</h2>
-  <div id="moodAvatar" class="mood-avatar">😎</div>
-  <div id="monthlyTotalDisplay" class="monthly-total">Spent: 0 ₫</div>
-  <div id="moodMessage" class="mood-msg">Feeling rich and chill.</div>
-  
-  <div class="sub-title">Top 3 Drains:</div>
-  <div id="topCategoriesList"></div>
-</div>
-
 </div>
 
 <div id="page-schedule" class="page hidden">
-    <div class="card">
+  <div class="card">
     <div class="cal-head">
       <button id="calPrev" class="small-btn">‹</button>
       <h3 id="calTitle"></h3>
       <button id="calNext" class="small-btn">›</button>
     </div>
     <div id="calGrid" class="cal-grid"></div>
-    <div class="rate-note">★ = has a schedule. Warmer color = closer date. Tap a day to start a task on it.</div>
+    <div class="note">! = to do. Warmer color = closer date. Tap a day to open it.</div>
   </div>
+  <div id="dayPanel" class="card hidden"></div>
   <div class="form">
     <input id="taskTitle" placeholder="Title">
     <input id="taskDue" type="datetime-local">
@@ -60,24 +55,20 @@
   <div id="list"></div>
 </div>
 
-<div class="page hidden" id="page-notes">
+<div id="page-notes" class="page hidden">
   <div class="section-header">
     <h2>📌 NOTES</h2>
-    <button class="retro-btn" id="openNoteModalBtn">+ Add Note</button>
+    <button class="retro-btn" id="openNote">+ Add Note</button>
   </div>
-
-  <!-- Note Grid Container -->
   <div id="noteList" class="note-grid"></div>
-
-  <!-- Modal Popup for Adding/Editing Notes -->
   <div id="noteModal" class="modal hidden">
-    <div class="modal-content card">
+    <div class="modal-box">
       <h3 id="noteModalTitle">New Note</h3>
-      <input type="text" id="noteTitle" placeholder="Note Title..." />
+      <input id="noteTitle" placeholder="Note title...">
       <textarea id="noteText" placeholder="Write your thoughts here..."></textarea>
       <div class="modal-buttons">
-        <button id="addNote" class="retro-btn">Save Note</button>
-        <button id="closeNoteModal" class="retro-btn secondary">Cancel</button>
+        <button id="saveNote" class="retro-btn">Save</button>
+        <button id="closeNote" class="retro-btn secondary">Cancel</button>
       </div>
     </div>
   </div>
@@ -92,63 +83,36 @@
 </div>
 
 <div id="page-money" class="page hidden">
-    <div class="card">
-    <h3>Wallet</h3>
-    <div id="balanceBox"></div>
-  </div>
-  <div class="card">
-    <h3>This month</h3>
-    <div id="moneySummary"></div>
-    <div id="moneyBars"></div>
-  </div>
-
-  <div class="card loan-card">
-    <h3>Loans</h3>
-    <div id="loanSummary"></div>
-  </div>
-
+  <div class="card c-green"><h3>Wallet</h3><div id="balanceBox"></div></div>
+  <div class="card c-blue"><h3>This month</h3><div id="moneySummary"></div></div>
+  <div class="card c-yellow"><h3>Loans</h3><div id="loanSummary"></div></div>
   <div class="form" id="moneyForm">
     <input id="moneyTitle" placeholder="What for?">
     <input id="moneyAmount" type="number" inputmode="decimal" placeholder="Amount in VND">
-    <div class="pay-btn-group" id="payButtonGroup">
-  <button type="button" class="pay-option active" data-value="cash">💵 Cash</button>
-  <button type="button" class="pay-option" data-value="cashless">💳 Card</button>
-  <button type="button" class="pay-option" data-value="loan">🤝 Loan</button>
-</div>
-<!-- Hidden input to keep track of the selected value for your script -->
-<input type="hidden" id="moneyPay" value="cash">
+    <div class="pay-btn-group">
+      <button type="button" class="pay-option active" data-value="cash">💵 Cash</button>
+      <button type="button" class="pay-option" data-value="cashless">💳 Card</button>
+      <button type="button" class="pay-option" data-value="loan">🤝 Loan</button>
+    </div>
+    <input type="hidden" id="moneyPay" value="cash">
     <input id="moneyPerson" class="hidden" placeholder="Loan to who? (name)">
     <select id="moneyType">
       <option value="expense">Expense</option>
       <option value="income">Income</option>
     </select>
     <select id="moneyCat">
-      <option>Food</option>
-      <option>Transport</option>
-      <option>Shopping</option>
-      <option>Bills</option>
-      <option>Fun</option>
-      <option>Salary</option>
-      <option>Gift</option>
-      <option>Other</option>
+      <option>Food</option><option>Transport</option><option>Shopping</option>
+      <option>Bills</option><option>Fun</option><option>Salary</option>
+      <option>Gift</option><option>Other</option>
     </select>
     <input id="moneyDate" type="date">
     <button id="addMoney">Add</button>
     <button id="cancelMoney" class="hidden">Cancel edit</button>
   </div>
-
   <div id="moneyList"></div>
 </div>
 
-<script>
-  window.onerror = function (m, s, l) { 
-    document.body.insertAdjacentHTML("afterbegin", "<pre style='background:#fdd;color:#900;padding:8px'>" + m + " (line " + l + ")</pre>"); 
-  };
-</script>
-
-<!-- Supabase Library -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Your script file -->
 <script src="script.js"></script>
-
+</body>
+</html>
