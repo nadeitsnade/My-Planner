@@ -499,3 +499,219 @@ pull();
 setInterval(tickClock, 1000);
 setInterval(() => document.querySelectorAll(".left").forEach((e) => e.textContent = leftText(e._t)), 1000);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pull(); });
+/* ---------- Money v2: pictures + borrowed loans ---------- */
+var photoUrl = "";
+
+function setDir(v) {
+  $("moneyDir").value = v;
+  document.querySelectorAll(".dir-option").forEach(function (b) {
+    b.classList.toggle("active", b.dataset.value === v);
+  });
+  $("moneyPerson").placeholder = v === "lent" ? "Lent to who? (name)" : "Borrowed from who? (name)";
+}
+document.querySelectorAll(".dir-option").forEach(function (b) {
+  b.onclick = function () { setDir(b.dataset.value); };
+});
+
+function setPay(v) {
+  $("moneyPay").value = v;
+  document.querySelectorAll(".pay-option").forEach(function (b) {
+    b.classList.toggle("active", b.dataset.value === v);
+  });
+  $("moneyPerson").classList.toggle("hidden", v !== "loan");
+  $("loanDir").classList.toggle("hidden", v !== "loan");
+  $("moneyType").classList.toggle("hidden", v === "loan");
+}
+
+function showPreview() {
+  const box = $("photoPreview");
+  box.innerHTML = "";
+  if (!photoUrl) return;
+  const img = el("img", "thumb");
+  img.src = photoUrl;
+  box.append(img, btn("Remove picture", "small-btn", function () {
+    photoUrl = "";
+    $("moneyPhoto").value = "";
+    showPreview();
+  }));
+}
+
+function shrinkImage(file, max, done) {
+  const img = new Image();
+  const url = URL.createObjectURL(file);
+  img.onload = function () {
+    const s = Math.min(1, max / Math.max(img.width, img.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.width * s);
+    c.height = Math.round(img.height * s);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    URL.revokeObjectURL(url);
+    c.toBlob(done, "image/jpeg", 0.7);
+  };
+  img.src = url;
+}
+
+$("moneyPhoto").onchange = function () {
+  const f = this.files[0];
+  if (!f) return;
+  showStatus("Uploading picture...");
+  shrinkImage(f, 1000, async function (blob) {
+    const path = Date.now() + "-" + Math.random().toString(36).slice(2, 8) + ".jpg";
+    const r = await SB.storage.from("receipts").upload(path, blob, { contentType: "image/jpeg" });
+    if (r.error) { showStatus("Picture failed: " + r.error.message, true); return; }
+    photoUrl = SB.storage.from("receipts").getPublicUrl(path).data.publicUrl;
+    showPreview();
+    showStatus("Picture added ✓");
+  });
+};
+
+function resetMoney() {
+  editMoney = null;
+  photoUrl = "";
+  ["moneyTitle", "moneyAmount", "moneyPerson"].forEach(function (i) { $(i).value = ""; });
+  $("moneyType").value = "expense";
+  $("moneyDate").value = todayStr();
+  $("moneyPhoto").value = "";
+  showPreview();
+  $("addMoney").textContent = "Add";
+  $("cancelMoney").classList.add("hidden");
+  setPay("cash");
+  setDir("lent");
+}
+
+function startEdit(m) {
+  editMoney = m;
+  $("moneyTitle").value = m.title;
+  $("moneyAmount").value = m.amount;
+  $("moneyType").value = m.type;
+  $("moneyCat").value = m.cat;
+  $("moneyDate").value = m.date;
+  $("moneyPerson").value = m.person || "";
+  photoUrl = m.photo || "";
+  showPreview();
+  setPay(m.pay);
+  setDir(m.dir || "lent");
+  $("addMoney").textContent = "Save changes";
+  $("cancelMoney").classList.remove("hidden");
+  $("moneyForm").scrollIntoView({ behavior: "smooth" });
+}
+
+$("addMoney").onclick = function () {
+  const amount = parseFloat($("moneyAmount").value), pay = $("moneyPay").value;
+  const person = $("moneyPerson").value.trim(), cat = $("moneyCat").value;
+  if (!amount || amount <= 0) return alert("Please enter an amount above 0.");
+  if (pay === "loan" && !person) return alert("Please write the person's name.");
+  const dir = $("moneyDir").value;
+  const e = {
+    title: $("moneyTitle").value.trim() ||
+      (pay === "loan" ? (dir === "lent" ? "Loan to " : "Loan from ") + person : cat),
+    amount: amount, type: $("moneyType").value, cat: cat,
+    date: $("moneyDate").value || todayStr(), pay: pay,
+    person: pay === "loan" ? person : "",
+    dir: pay === "loan" ? dir : "",
+    photo: photoUrl
+  };
+  if (editMoney) Object.assign(editMoney, e, { paid: pay === "loan" ? Math.min(editMoney.paid || 0, amount) : 0 });
+  else money.push(Object.assign({ id: Date.now(), paid: 0 }, e));
+  resetMoney();
+  commit();
+};
+
+function repay(m) {
+  const left = m.amount - (m.paid || 0);
+  const q = m.dir === "borrowed"
+    ? "How much did you pay back to " + m.person + "? (in VND)"
+    : "How much did " + m.person + " pay back? (in VND)";
+  const x = parseFloat(prompt(q + "\nStill open: " + fmt(left)));
+  if (!x || x <= 0) return;
+  m.paid = Math.min(m.amount, (m.paid || 0) + x);
+  commit();
+}
+
+function renderMoney() {
+  let cash = 0, card = 0, inc = 0, sp = 0, spCash = 0, spCard = 0;
+  let lentLeft = 0, borrowedLeft = 0;
+  const month = todayStr().slice(0, 7), dayNet = {}, lentBy = {}, borrowedBy = {};
+
+  money.forEach(function (m) {
+    if (m.pay === "loan") {
+      const left = Math.max(0, m.amount - (m.paid || 0));
+      const key = m.person.trim().toLowerCase();
+      const bucket = m.dir === "borrowed" ? borrowedBy : lentBy;
+      if (m.dir === "borrowed") borrowedLeft += left; else lentLeft += left;
+      (bucket[key] = bucket[key] || { name: m.person.trim(), left: 0 }).left += left;
+      return;
+    }
+    const s = m.type === "income" ? m.amount : -m.amount;
+    if (m.pay === "cashless") card += s; else cash += s;
+    dayNet[m.date] = (dayNet[m.date] || 0) + s;
+    if (m.date.slice(0, 7) === month) {
+      if (m.type === "income") inc += m.amount;
+      else { sp += m.amount; if (m.pay === "cashless") spCard += m.amount; else spCash += m.amount; }
+    }
+  });
+
+  fill("balanceBox", [["Cash", cash, sign(cash)], ["Cashless", card, sign(card)], ["Total", cash + card, sign(cash + card)]]);
+  fill("moneySummary", [["Income", inc, "plus"], ["Spent", sp, "minus"], ["Net", inc - sp, sign(inc - sp)],
+    ["Spent in cash", spCash, ""], ["Spent cashless", spCard, ""]]);
+  $("moneySummary").append(el("div", "note", "1 ₫ = " + rate.toFixed(4) + " Rp (" + rateNote + ")"));
+
+  if (!money.some(function (m) { return m.pay === "loan"; })) {
+    $("loanSummary").textContent = "No loans yet.";
+  } else {
+    const rows = [["Owed to you", lentLeft, "plus"], ["You owe", borrowedLeft, "minus"]];
+    Object.values(lentBy).filter(function (o) { return o.left > 0; })
+      .forEach(function (o) { rows.push(["→ " + o.name + " owes you", o.left, "plus"]); });
+    Object.values(borrowedBy).filter(function (o) { return o.left > 0; })
+      .forEach(function (o) { rows.push(["← you owe " + o.name, o.left, "minus"]); });
+    fill("loanSummary", rows);
+  }
+
+  const list = $("moneyList");
+  list.innerHTML = "";
+  let last = null;
+  money.slice().sort(function (a, b) { return b.date.localeCompare(a.date) || b.id - a.id; }).forEach(function (m) {
+    if (m.date !== last) {
+      last = m.date;
+      const n = dayNet[m.date] || 0, h = el("div", "day-head");
+      h.append(el("span", null, parseD(m.date).toLocaleDateString(undefined,
+        { weekday: "short", day: "numeric", month: "short", year: "numeric" })),
+        el("span", null, (n >= 0 ? "+" : "-") + fmt(Math.abs(n))));
+      list.append(h);
+    }
+    const loan = m.pay === "loan", borrowed = m.dir === "borrowed";
+    const left = Math.max(0, m.amount - (m.paid || 0));
+    const c = el("div", "task pay-" + m.pay + (borrowed ? " borrowed" : ""));
+    const info = el("div", "info"), acts = el("div", "actions");
+
+    info.append(el("strong", null, m.title),
+      el("div", "when", m.cat + " · " + (loan ? (borrowed ? "Borrowed from " : "Lent to ") + m.person :
+        m.pay === "cashless" ? "Card" : "Cash")),
+      el("div", loan ? "" : m.type === "income" ? "plus" : "minus",
+        loan ? (borrowed ? "Borrowed: " : "Lent: ") + fmt(m.amount) :
+          (m.type === "income" ? "+" : "-") + fmt(m.amount)),
+      el("div", "idr", "≈ " + fmtIDR(m.amount)));
+    if (loan) info.append(
+      el("div", "when", (borrowed ? "You paid back: " : "Paid back: ") + fmt(m.paid || 0)),
+      el("div", left ? "minus" : "plus", left ? "Remaining: " + fmt(left) : "Fully paid back ✓"));
+    if (m.photo) {
+      const img = el("img", "thumb");
+      img.src = m.photo;
+      img.onclick = function () { window.open(m.photo, "_blank"); };
+      info.append(img);
+    }
+
+    acts.append(btn("Edit", "small-btn", function () { startEdit(m); }));
+    if (loan && left) acts.append(btn("Repay", "small-btn", function () { repay(m); }));
+    acts.append(delBtn(function () {
+      if (!confirm("Delete this entry?")) return;
+      money = money.filter(function (x) { return x !== m; });
+      commit();
+    }));
+    c.append(info, acts);
+    list.append(c);
+  });
+}
+
+resetMoney();
+render();
