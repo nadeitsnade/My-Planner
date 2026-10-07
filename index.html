@@ -95,6 +95,11 @@
       <button type="button" class="pay-option" data-value="loan">🤝 Loan</button>
     </div>
     <input type="hidden" id="moneyPay" value="cash">
+      <div id="loanDir" class="pay-btn-group hidden">
+  <button type="button" class="dir-option active" data-value="lent">➡️ I lent</button>
+  <button type="button" class="dir-option" data-value="borrowed">⬅️ I borrowed</button>
+</div>
+<input type="hidden" id="moneyDir" value="lent">
     <input id="moneyPerson" class="hidden" placeholder="Loan to who? (name)">
     <select id="moneyType">
       <option value="expense">Expense</option>
@@ -105,6 +110,10 @@
       <option>Bills</option><option>Fun</option><option>Salary</option>
       <option>Gift</option><option>Other</option>
     </select>
+    <label class="photo-pick">📷 Add picture
+  <input type="file" id="moneyPhoto" accept="image/*">
+</label>
+<div id="photoPreview"></div>
     <input id="moneyDate" type="date">
     <button id="addMoney">Add</button>
     <button id="cancelMoney" class="hidden">Cancel edit</button>
